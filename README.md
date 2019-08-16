@@ -1,33 +1,20 @@
-# React Native Text Detector
+# React Native Text Detector [Tesseract]
 
 [![npm](https://img.shields.io/npm/dm/react-native-text-detector.svg)](https://www.npmjs.com/package/react-native-text-detector)
 
-
 ## See it in action
-Checkout these blog for 
-- [Business Card Reading App](https://heartbeat.fritz.ai/building-text-detection-apps-for-ios-and-android-using-react-native-42fe3c7e339) 
-- [Delta ML - Comparison between different OCR SDKs (iOS)](https://heartbeat.fritz.ai/comparing-on-device-text-recognition-ocr-sdks-24f8a0423461)
-- [Choose the Right On-Device Text Recognition (OCR) SDK on Android Using DeltaML](https://heartbeat.fritz.ai/https-heartbeat-fritz-ai-choose-the-right-on-device-text-recognition-sdk-on-android-using-deltaml-9b4b3e409b6e)
 
-for example of this package.
-
-## Different libraries
-Default branch uses Tesseract on iOS and Firebase ML Kit on android. Beside that we have 2 branches
-
-- [Firebase](https://github.com/zsajjad/react-native-text-detector/tree/firebase) it uses firebase on both platforms
-- [Tesseract OCR](https://github.com/zsajjad/react-native-text-detector/tree/tesseract) it uses tesseract on both platforms
-
-For deciding between which one is better check this blog on [Hearbeat by Fritz.ai](https://heartbeat.fritz.ai/comparing-on-device-text-recognition-ocr-sdks-24f8a0423461)
+Checkout this blog for [HeartBeat by Fritz.ai](https://heartbeat.fritz.ai/building-text-detection-apps-for-ios-and-android-using-react-native-42fe3c7e339) for example of this package.
 
 ## Getting started
 
-`$ npm install react-native-text-detector --save` or `yarn add react-native-text-detector`
+`$ npm install react-native-text-detector#tesseract --save` or `yarn add react-native-text-detector#tesseract`
 
 ### Manual installation
 
 #### iOS
 
-##### Attach Tesseract Languages you want to use in your app 
+##### Attach Tesseract Languages you want to use in your app
 
 Import your tessdata folder (you can download one for your language from [Google's Repo](https://code.google.com/p/tesseract-ocr/downloads/list) OR if that gives an error use [THIS REPO](https://github.com/tesseract-ocr/tessdata/tree/bf82613055ebc6e63d9e3b438a5c234bfd638c93) as referenced on [stack overflow as solution](https://stackoverflow.com/questions/41131083/tesseract-traineddata-not-working-in-swift-3-0-project-using-version-4-0/41168236#41168236) into the root of your project AS A REFERENCED FOLDER (see below). It contains the Tesseract trained data files. You can add your own trained data files here too.
 
@@ -40,17 +27,23 @@ Note how the tessdata folder has a blue icon, indicating it was imported as a re
 ##### Also add `-lstdc++` if not already present
 
 ##### Using Pods (Recommended)
-1. Add following in `ios/Podfile` 
+
+1. Add following in `ios/Podfile`
+
 ```ruby
     pod 'RNTextDetector', path: '../node_modules/react-native-text-detector/ios'
 ```
+
 2. Run following from project's root directory
+
 ```bash
     cd ios && pod install
 ```
+
 3. Use `<your_project>.xcworkspace` to run your app
 
 ##### Direct Linking
+
 1.  In XCode, in the project navigator, right click `Libraries` ➜ `Add Files to [your project's name]`
 2.  Go to `node_modules` ➜ `react-native-text-detector` and add `RNTextDetector.xcodeproj`
 3.  In XCode, in the project navigator, select your project. Add `libRNTextDetector.a` to your project's `Build Phases` ➜ `Link Binary With Libraries`
@@ -58,9 +51,9 @@ Note how the tessdata folder has a blue icon, indicating it was imported as a re
 
 #### Android
 
-This package uses Firebase ML Kit for text recognition on android please make sure you have integrated firebase in your app before started integration of this package. [Here is the guide](https://firebase.google.com/docs/android/setup) for Firebase integration.
+##### Attach Tesseract Languages you want to use in your app
 
-1.  Open up `android/app/src/main/java/[...]/MainApplication.java`
+1.  Open up `android/app/src/main/java/[...]/MainActivity.java`
 
 - Add `import com.fetchsky.RNTextDetector.RNTextDetectorPackage;` to the imports at the top of the file
 - Add `new RNTextDetectorPackage()` to the list returned by the `getPackages()` method
@@ -72,39 +65,14 @@ This package uses Firebase ML Kit for text recognition on android please make su
     ```
 3.  Insert the following lines inside the dependencies block in `android/app/build.gradle`:
 
-    ```
+    ```groovy
     ...
     dependencies {
-        implementation 'com.google.firebase:firebase-core:16.0.1'
-        implementation 'com.google.firebase:firebase-ml-vision:17.0.0'
-
-        implementation (project(':react-native-text-detector')) {
-            exclude group: 'com.google.firebase'
-        }
-    }
-
-    // Place this line at the end of file
-
-    apply plugin: 'com.google.gms.google-services'
-
-    // Work around for onesignal-gradle-plugin compatibility
-    com.google.gms.googleservices.GoogleServicesPlugin.config.disableVersionCheck = true
-    ```
-
-4.  Insert the following lines inside the dependencies block in `android/build.gradle`:
-
-    ```
-    buildscript {
-        repositories {
-            google()
-            ...
-        }
-        dependencies {
-            classpath 'com.android.tools.build:gradle:3.0.1'
-            classpath 'com.google.gms:google-services:4.0.1' // google-services plugin
-        }
+        implementation project(':react-native-text-detector')
     }
     ```
+
+4.  [v3.04 Trained data](https://github.com/tesseract-ocr/tessdata/tree/3.04.00) files for a language must be extracted in android/app/src/main/assets/tessdata.
 
 ## Usage
 
@@ -128,7 +96,15 @@ export class TextDetectionComponent extends PureComponent {
         skipProcessing: true,
       };
       const { uri } = await this.camera.takePictureAsync(options);
-      const visionResp = await RNTextDetector.detectFromUri(uri);
+      const visionResp = await RNTextDetector.detect({
+          imagePath: uri, // this can be remote url as well, package will handle such url internally
+          language: "eng",
+          pageIteratorLevel: "textLine",
+          pageSegmentation: "SparseTextOSD" // optional
+          charWhitelist: "01234567" // optional
+          charBlacklist: "01234567" // optional
+          imageTransformationMode: 2, // optional | 0 => none | 1 => g8_grayScale | 2 => g8_blackAndWhite
+      });
       console.log('visionResp', visionResp);
     } catch (e) {
       console.warn(e);
